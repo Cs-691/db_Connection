@@ -1,31 +1,51 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
-import os
 
-app = Flask(__name__)
-basedir = os.path.abspath(os.path.dirname(__file__))
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'crud.sqlite')
-print(app.config['SQLALCHEMY_DATABASE_URI'])
+
+
+
+
+
+
+app = Flask(__name__, instance_relative_config=True)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root@localhost:3306/test2'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS']='false'
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
+db.init_app(app)
 
 
 class User(db.Model):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True)
+    firstName = db.Column(db.String(80), unique=True)
+    lastName = db.Column(db.String(80), unique=True)
+    age = db.Column(db.Integer)
+    gender = db.Column(db.String(80), unique=True)
     email = db.Column(db.String(120), unique=True)
+    password = db.Column(db.String(120), unique=True)
+    country = db.Column(db.String(120), unique=True)
+    disabilities = db.Column(db.String(120), unique=True)
+    conditions = db.Column(db.String(120), unique=True)
 
-    def __init__(self, username, email):
-        self.username = username
-        self.email = email
+    def __init__(self, firstName, lastName,age,gender,email,password,country,disabilities,conditions):
+        self.firstName = firstName
+        self.lastName = lastName
+        self.age=age
+        self.gender=gender
+        self.email=email
+        self.password=password
+        self.country=country
+        self.disabilities=disabilities
+        self.conditions=conditions
 
 
 class UserSchema(ma.Schema):
     class Meta:
         # Fields to expose
-        fields = ('username', 'email')
+        fields = ('firstName', 'lastName','age')
 
 
 user_schema = UserSchema()
@@ -33,12 +53,19 @@ users_schema = UserSchema(many=True)
 
 
 # endpoint to create new user
-@app.route("/user", methods=["POST"])
+@app.route("/Adduser", methods=["POST"])
 def add_user():
-    username = request.json['username']
+    firstName = request.json['firstName']
+    lastName = request.json['lastName']
+    age = request.json['age']
+    gender = request.json['gender']
     email = request.json['email']
+    password = request.json['password']
+    country = request.json['country'] 
+    disabilities = request.json['disabilities']
+    conditions = request.json['conditions']
     
-    new_user = User(username, email)
+    new_user = User(firstName, lastName,age,gender,email,password,country,disabilities,conditions)
 
     db.session.add(new_user)
     db.session.commit()
@@ -83,6 +110,10 @@ def user_delete(id):
     db.session.commit()
 
     return user_schema.jsonify(user)
+
+@app.route('/')
+def hello_world():
+        return 'Hello, World12qw'
 
 
 if __name__ == '__main__':
